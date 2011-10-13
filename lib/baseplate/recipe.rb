@@ -49,8 +49,9 @@ module Baseplate
       FileUtils.rm_r logdir unless logdir.nil?
     end
 
-    def install_debian
-      #yield
+    def install_debian(&script)
+      c = Debootstrap.evaluate(&script)
+      c.run @opts
     end
   end
 
@@ -79,6 +80,75 @@ module Baseplate
         options ||= "rw"
       end
       @config << 'primary %s %s %s %s' % [mountpoint, size, fstype, options]
+    end
+  end
+
+  class Debootstrap
+    def self.evaluate(&script)
+      c = new
+      c.instance_eval(&script)
+      c
+    end
+
+    def initialize
+      @opts = {}
+      @hostname = `hostname -f`.chomp
+      @release = :stable
+      @vendor = :debian
+      @packages = []
+      @mirror = nil
+      @root_device = nil
+    end
+
+    def mirror(line)
+      @mirror = line
+    end
+
+    def package(name)
+      @packages << name
+    end
+
+    def hostname(name)
+      @hostname = name
+    end
+
+    def release(name)
+      @release = name
+    end
+
+    def root_device(name)
+      @root_device = name
+    end
+
+    # :nodoc:
+    def run(opts)
+      packagelist = Tempfile.new('packages')
+      packagelist.write File.read('/etc/debootstrap/packages') unless opts[:dryrun] == true
+      packagelist.write @packages.join(' ')
+      packagelist.close
+
+      cmd = ['grml-debootstrap', '--force', '--hostname', @hostname, '--target', @root_device, '-v', '--packages', packagelist.path]
+      if @mirror.nil? and @vendor == :ubuntu
+        @mirror = 'http://archive.ubuntu.com/ubuntu/'
+      end
+      if @mirror
+        cmd << '--mirror'
+        cmd << @mirror
+      end
+      cmd << '--release'
+      cmd << @release.to_s
+
+      cmd = cmd.join(' ')
+      puts "* Execute: #{cmd}"
+      if !opts[:dryrun]
+        p = IO.popen(cmd)
+        out = p.readlines
+        p.close
+        if $?.exitstatus != 0
+          raise "grml-debootstrap failed with exitstatus #{$?.exitstatus}. Output:\n#{out}"
+        end
+      end
+
     end
   end
 end

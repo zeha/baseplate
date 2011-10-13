@@ -4,5 +4,11 @@ recipe do
         primary '/', :ext3, '100M'
         primary 'swap', :swap, '2G'
     end
-    install_debian
+    install_debian do
+        root_device '/dev/sda1'
+        package 'firmware-bnx2'
+        package 'firmware-bnx2x'
+        release :testing
+        hostname 'example-host'
+    end
 end 
