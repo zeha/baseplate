@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+begin
+  require "baseplate/boot"
+rescue LoadError
+  $: << File.expand_path('../../lib', __FILE__)
+  require "baseplate/boot"
+end
+
+Baseplate::Main.run
+
