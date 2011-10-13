@@ -1,0 +1,8 @@
+recipe do
+    setup_storage do
+        disk :sda
+        primary '/', :ext3, '100M'
+        primary 'swap', :swap, '2G'
+    end
+    install_debian
+end 
