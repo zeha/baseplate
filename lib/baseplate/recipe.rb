@@ -53,6 +53,19 @@ module Baseplate
       c = Debootstrap.evaluate(&script)
       c.run @opts
     end
+
+    def reboot
+      puts "Will reboot in 30 seconds..."
+      sleep 30
+      if !@opts[:dryrun]
+        puts "Reboot..."
+        Kernel.exec "reboot"
+      else
+        puts "Reboot (dry-run)."
+        Process.exit!
+      end
+      # never get here
+    end
   end
 
   class StorageConfig
