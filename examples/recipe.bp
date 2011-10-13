@@ -10,5 +10,7 @@ recipe do
         package 'firmware-bnx2x'
         release :testing
         hostname 'example-host'
+        mirror 'http://debian.inode.at/debian/'
     end
+    reboot
 end 
