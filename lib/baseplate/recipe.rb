@@ -22,28 +22,31 @@ module Baseplate
       config = StorageConfig.evaluate(&script)
 
       tpl = Tempfile.new('setupstorage')
-      tpl.write config.join("\n")
+      tpl.write config
       tpl.close
+      logdir = tpl.path + '.d'
+      FileUtils.mkdir logdir
 
       path = '/usr/lib/fai:' + ENV['PATH']
-      cmd = "PATH=#{path} disklist=$(/usr/lib/fai/disk-info | sort) setup-storage -X -f #{tpl.path}"
-      if @opts[:dryrun]
-        puts "Would execute: #{cmd}"
-        puts "  Config:"
-        puts config
-        puts "EOF"
-      else
+      cmd = "PATH=#{path} HOME=#{logdir} LOGDIR=#{logdir} disklist=$(/usr/lib/fai/disk-info | sort) setup-storage -X -f #{tpl.path}"
+      puts "* Execute: #{cmd}"
+      if !@opts[:dryrun]
         p = IO.popen(cmd)
         out = p.readlines
         p.close
 
-        if $?.returncode != 0
-          raise "fai-setup-storage failed with returncode #{$?.returncode}. Output:\n#{out}"
+        if $?.exitstatus != 0
+          raise "fai-setup-storage failed with exitstatus #{$?.exitstatus}. Output:\n#{out}"
         end
+      else
+        puts "  Config:"
+        puts config
+        puts "EOF"
       end
 
     ensure
-      tpl.unlink if tpl
+      tpl.unlink unless tpl.nil?
+      FileUtils.rm_r logdir unless logdir.nil?
     end
 
     def install_debian
@@ -55,7 +58,8 @@ module Baseplate
     def self.evaluate(&script)
       c = new
       c.instance_eval(&script)
-      c.config
+      c.config << ''
+      c.config.join("\n")
     end
 
     attr_reader :config
