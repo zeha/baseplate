@@ -140,6 +140,8 @@ module Baseplate
       packagelist.write @packages.join(' ')
       packagelist.close
 
+      # TODO - use --nopassword to avoid hanging process, available
+      # with grml-debootstrap >= 0.48
       cmd = ['grml-debootstrap', '--force', '--hostname', @hostname, '--target', @root_device, '-v', '--packages', packagelist.path]
       if @mirror.nil? and @vendor == :ubuntu
         @mirror = 'http://archive.ubuntu.com/ubuntu/'
