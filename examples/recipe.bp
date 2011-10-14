@@ -1,8 +1,8 @@
 recipe do
     setup_storage do
         disk :sda
-        primary '/', :ext3, '100M'
-        primary 'swap', :swap, '2G'
+        primary '/', :ext3, '90%'
+        primary 'swap', :swap, '10%'
     end
     install_debian do
         root_device '/dev/sda1'
